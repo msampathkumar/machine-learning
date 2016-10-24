@@ -1,0 +1,206 @@
+Smart Cab - Agent
+
+
+QUESTION: Observe what you see with the agent's behavior as it takes random actions. Does the smartcab eventually make it to the destination? Are there any other interesting observations to note?
+
+Yes, after taking random actions also smartcab eventually makes it to the destination. I believe this is due to lack to deadline enforcement.
+
+Some expected observations are
+* Takes lot of time & step compared to Q learning SmartCab.
+* Prone to lot of accidents
+
+
+QUESTION: What states have you identified that are appropriate for modeling the smartcab and environment? Why do you believe each of these states to be appropriate for this problem?
+
+OPTIONAL: How many states in total exist for the smartcab in this environment? Does this number seem reasonable given that the goal of Q-Learning is to learn and make informed decisions about each state? Why or why not?
+
+As per my program, a state consists of following
+* next_waypoint - (None, left, forward, right)
+* inputs - light - (Green, Red)
+* inputs - left  - (None, left, forward, right)
+* inputs - forward  - (None, left, forward, right)
+* inputs - right  - (None, left, forward, right)
+
+Total states identified = 4 * 2 * 4 * 4 * 4 = 512.
+
+I believe it’s only a natural instinct to check Safety and Precaution, to be cautious/alert when we are closer to dangers. So while we are driving, I see the possible main reason of getting hurt(accident) could be is other car drivers does not know I am driving in this direction and failed to follow traffic signals. Although if other drivers does not follow or mis-interrupt traffic rules then we might end in a incident, so hope for now case study let assume that all other drivers are well trained algorithms and lets do our part of safety control :)
+
+So in an intersection, checking left, right and forward direction is important. In similar way, input - light is important for us to follow and not to make an accident.
+
+Now that we all the basic details for Safety and Precaution, we are only need one basic detail like where to go(next_waypoint).
+
+In total we need these 5 inputs are must to keep our driver and my customer(you) safe and reach destination. So if a Q learning machine needs to my drivers job then it need to what I know right?
+
+
+QUESTION: What changes do you notice in the agent's behavior when compared to the basic driving agent when random actions were always taken? Why is this behavior occurring?
+
+Observation in my test trial with Q learning
+* I see that 99 trail finished before deadline.
+* Q learning was able to complete Trails runs for 100 faster than random logic.
+
+
+QUESTION: Report the different values for the parameters tuned in your basic implementation of Q-Learning. For which set of parameters does the agent perform best? How well does the final driving agent perform?
+
+QUESTION: Does your agent get close to finding an optimal policy, i.e. reach the destination in the minimum possible time, and not incur any penalties? How would you describe an optimal policy for this problem?
+
+Before we find an optimal policy, let have some key important roles that are required for a (smart) cab driver.
+
+1. Driver does follow all traffic rules ==> No.of -tives records should less. We would prefer to have zero but learning requires exploring & failing is a part our daily learning curves
+2. Driver's -tive should reduce as trails increase
+3. Reaches to destination
+4. Reaches to destination early if possible
+
+So, I have parameters alpha, gamma, epsilon which control the learning behaving of Q and these get updated at two place. One is when our agent is in the initialisation stage and second is during each reset of agent, we increment or decrement these initial values.
+
+
+If I/you were that smart program, it would be wise to try different combination during initial start with good learning curve and as you learn and more experienced you already would have learned all basics so you try to do better performance  experience and less randomness & learning curve.
+
+So I kept the learning curve (self.alpha) higher than .5 and I experimented with gamma and epsilon. These the best combination that gave more satisfactory scores are these
+
+# initial settings
+        self.alpha = 1.0
+        self.gamma = 0.75
+        self.epsilon = 0.4
+
+# improvements during reset
+        if self.alpha > .55:
+            self.alpha -= 0.01
+            self.gamma += 0.02
+            self.epsilon += 0.01
+
+
+
+Other experiments I have tried
+
+Checking Initial values for following reset parameters
+
+        self.alpha -= 0.01
+        self.gamma += 0.01
+        self.epsilon += 0.01
+
+Case 0:
+
+        self.alpha = 1.0
+        self.gamma = 0.1
+        self.epsilon = 0.1
+
+No.of Successfully Trips is: 13
+Total reward sum: 586.0
+
+No.of Successfully Trips is: 38
+Total reward sum: 1205.5
+
+
+Case 1: Conclusion: given other factor are constant, therein in an increase in score if initial gamma is higher(>0.1)
+
+No.of Successfully Trips is: 61
+Total reward sum: 1734.5
+
+No.of Successfully Trips is: 65
+Total reward sum: 1736.0
+
+        self.alpha = 1.0
+        self.gamma = 0.5
+        self.epsilon = 0.1
+
+Case 2: Conclusion: given other factor are constant, therein in an increase in score if initial epsilon is higher(>0.1)
+
+No.of Successfully Trips is: 42
+Total reward sum: 1290.0
+
+No.of Successfully Trips is: 47
+Total reward sum: 1381.5
+
+        self.alpha = 1.0
+        self.gamma = 0.1
+        self.epsilon = 0.5
+
+
+Case 3:
+
+        self.alpha = 1.5
+        self.gamma = 0.1
+        self.epsilon = 0.1
+
+No.of Successfully Trips is: 95
+Total reward sum: 2485.5
+
+Case 4:
+
+        self.alpha = 1.5
+        self.gamma = 0.75
+        self.epsilon = 0.5
+
+No.of Successfully Trips is: 99
+Total reward sum: 2336.5
+
+
+Case 5:
+
+        self.alpha = 1.0
+        self.gamma = 0.75
+        self.epsilon = 0.4
+
+        if self.alpha > .55:
+            self.alpha -= 0.01
+        self.gamma += 0.01
+        self.epsilon += 0.01
+
+No.of Successfully Trips is: 99
+Total reward sum: 2345.5
+
+No.of Successfully Trips is: 100
+Total reward sum: 2299.0
+
+No.of Successfully Trips is: 98
+Total reward sum: 2310.0
+
+
+No.of Successfully Trips is: 99
+Total reward sum: 2420.5
+
+Case 6:
+
+        self.alpha = 1.0
+        self.gamma = 0.75
+        self.epsilon = 0.4
+
+        if self.alpha > .65:
+            self.alpha -= 0.01
+            self.gamma += 0.02
+            self.epsilon += 0.01
+
+No.of Successfully Trips is: 99
+Total reward sum: 2321.5
+
+No.of Successfully Trips is: 100
+Total reward sum: 2285.5
+
+No.of Successfully Trips is: 100
+Total reward sum: 2392.0
+
+
+Case 7:
+        self.alpha = 1.0
+        self.gamma = 0.75
+        self.epsilon = 0.4
+
+        if self.alpha > .55:
+            self.alpha -= 0.01
+            self.gamma += 0.02
+            self.epsilon += 0.01
+
+No.of Successfully Trips is: 100
+Total reward sum: 2366.5
+
+No.of Successfully Trips is: 99
+Total reward sum: 2280.5
+
+No.of Successfully Trips is: 99
+Total reward sum: 2367.5
+
+
+
+
+How to use
+
