@@ -4,6 +4,7 @@ Contains Agent for implementation of Q Learning Algorithms
 Refs:
 https://discussions.udacity.com/t/how-do-i-capture-two-states-in-order-to-implement-the-q-learning-algorithm/191327/2
 
+
 '''
 
 import random
@@ -23,24 +24,34 @@ class LearningAgent(Agent):
     """An agent that learns to drive in the smartcab world."""
 
     def __init__(self, env):
-        super(LearningAgent, self).__init__(env)  # sets self.env = env, state = None, next_waypoint = None, and a default color
+        super(LearningAgent, self).__init__(env) # sets self.env = env, state = None, next_waypoint = None, and a default color
         self.color = 'red'  # override color
-        self.planner = RoutePlanner(self.env, self)  # simple route planner to get next_waypoint
+        self.planner = RoutePlanner(self.env, self) # simple route planner to get next_waypoint
         # TODO: Initialize any additional variables here
         self.state = None
         self.reward = None
         self.action = None
-        self.alpha = 0.8
-        self.gamma = 0.8
-        self.epsilon = 0.8
+        self.Q = dict()
+        self.alpha = 1.0
+        self.gamma = 0.75
+        self.epsilon = 0.4
+        # A trails session varibles
         self.prev_state = None
         self.prev_reward = None
         self.prev_action = None
-        self.Q = dict()
 
     def reset(self, destination=None):
         self.planner.route_to(destination)
+        # pdb.set_trace()
         # TODO: Prepare for a new trip; reset any variables here, if required
+        self.prev_state = None
+        self.prev_reward = None
+        self.prev_action = None
+        
+        if self.alpha > .55:
+            self.alpha -= 0.01
+            self.gamma += 0.02
+            self.epsilon += 0.01
 
     def get_q_val(self, state, action):
         try:
@@ -50,8 +61,11 @@ class LearningAgent(Agent):
         return 0
 
     def best_q_action(self, s):
-        # greedy selection to find the best action according to Q
-        # returns action & reward
+        '''
+        Greedy Selection - To find the best action according to Q
+
+        Note: First selection after Q initialisation is always random
+        '''
         max_reward = 0
         best_action = ''
         if self.prev_state or (random.random() > self.epsilon):
@@ -99,7 +113,6 @@ class LearningAgent(Agent):
         # Execute action and get reward
         reward = self.env.act(self, action)
         self.reward = reward
-        print 'LearningAgent.update(): expected_reward = {}, received_reward = {}'.format(expected_reward, reward)
 
         # TODO: Learn policy based on state, action, reward
         self.update_q_policy()
@@ -108,10 +121,10 @@ class LearningAgent(Agent):
         self.prev_state = state
         self.prev_action = action
         self.prev_reward = reward
-        if deadline == 0:
-            pprint(self.Q)
-            # pdb.set_trace()
-        print "LearningAgent.update(): deadline = {}, inputs = {}, action = {}, reward = {}".format(deadline, inputs, action, reward)  # [debug]
+
+        # [debug]
+        params = (deadline, inputs, action, expected_reward, reward)
+        print "LearningAgent.update(): deadline = {}, inputs = {}, action = {}, expected_reward = {}, reward = {}".format(*params)
 
 
 def run():
@@ -124,7 +137,7 @@ def run():
     # NOTE: You can set enforce_deadline=False while debugging to allow longer trials
 
     # Now simulate it
-    sim = Simulator(e, update_delay=0.0005, display=False)  # create simulator (uses pygame when display=True, if available)
+    sim = Simulator(e, update_delay=0, display=False)  # create simulator (uses pygame when display=True, if available)
     # NOTE: To speed up simulation, reduce update_delay and/or set display=False
 
     sim.run(n_trials=100)  # run for a specified number of trials
