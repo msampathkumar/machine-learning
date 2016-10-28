@@ -32,26 +32,45 @@ class LearningAgent(Agent):
         self.reward = None
         self.action = None
         self.Q = dict()
-        self.alpha = 1.0
-        self.gamma = 0.75
-        self.epsilon = 0.4
+        self.alpha = .75 # learning rate
+        self.gamma = .10 # discount factor
+        self.epsilon = .35 # randomness
+        self.counter = 0
         # A trails session varibles
         self.prev_state = None
         self.prev_reward = None
         self.prev_action = None
 
     def reset(self, destination=None):
+        '''
+        * Alpha(learning factor): When the problem is stochastic, the algorithm still converges
+             under some technical conditions on the learning rate, that require it to decrease to zero.
+             In practice, often a constant learning rate is used, such as 
+             alpha(s,a)=0.1 for all t.
+        * Gamma(discount factor): starting with a lower discount factor and increasing it towards its
+             final value yields accelerated learning
+        * Epsilon(exploration factor): higher the randomness higher the exploration
+        '''
         self.planner.route_to(destination)
         # pdb.set_trace()
         # TODO: Prepare for a new trip; reset any variables here, if required
         self.prev_state = None
         self.prev_reward = None
         self.prev_action = None
-        
-        if self.alpha > .55:
+
+        if self.counter < 50:
             self.alpha -= 0.01
-            self.gamma += 0.02
-            self.epsilon += 0.01
+            # self.alpha = (self.alpha // 0.0001) * 0.0001
+
+        if self.counter < 0:
+            self.gamma += 0.01
+
+        if self.epsilon < 0:
+            # self.epsilon -= 0.01
+            self.epsilon = (self.epsilon // 0.0001) * 0.0001
+
+
+        self.counter += 50
 
     def get_q_val(self, state, action):
         try:
@@ -68,10 +87,10 @@ class LearningAgent(Agent):
         '''
         max_reward = 0
         best_action = ''
-        if self.prev_state or (random.random() > self.epsilon):
+        if self.prev_state or (random.random() > (1 - self.epsilon)):
             for act in ALL_ACTIONS:
                 tmp = self.get_q_val(s, act)
-                if max_reward <= tmp:
+                if not max_reward or max_reward <= tmp:
                     max_reward = tmp
                     best_action = act
         else:
@@ -84,12 +103,15 @@ class LearningAgent(Agent):
         if self.prev_state:
             s, r, a = self.prev_state, self.prev_reward, self.prev_action
             s1, r1, a1 = self.state, self.reward, self.action
+            #
+            estimated_optimal_future_value = max(map(lambda x: self.get_q_val(s1, x), ALL_ACTIONS))
             self.Q[(s, a)] = self.get_q_val(s, a) + \
                     (self.alpha * ( r + \
-                            self.gamma * (
+                            # self.gamma * (
                                 # max([self.get_q_val(s1, a1) - self.get_q_val(s, a)]) )
-                                self.get_q_val(s1, a1) - self.get_q_val(s, a)
-                            )
+                                # self.get_q_val(s1, a1) - self.get_q_val(s, a)
+                                self.gamma * estimated_optimal_future_value  - self.get_q_val(s, a)
+                            # )
                         )
                     )
 
@@ -140,7 +162,7 @@ def run():
     sim = Simulator(e, update_delay=0, display=False)  # create simulator (uses pygame when display=True, if available)
     # NOTE: To speed up simulation, reduce update_delay and/or set display=False
 
-    sim.run(n_trials=100)  # run for a specified number of trials
+    sim.run(n_trials=400)  # run for a specified number of trials
     # NOTE: To quit midway, press Esc or close pygame window, or hit Ctrl+C on the command-line
 
 
