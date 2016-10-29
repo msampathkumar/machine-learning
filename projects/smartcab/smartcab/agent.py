@@ -17,6 +17,8 @@ from simulator import Simulator
 
 GEAR = 2
 
+reducer_func = lambda x: ( x * .95 // 0.001) * 0.001
+
 ALL_STATES = ['light', 'oncoming', 'left', 'right']
 ALL_ACTIONS = [None, 'forward', 'left', 'right']
 
@@ -52,31 +54,37 @@ class LearningAgent(Agent):
         * Epsilon(exploration factor): higher the randomness higher the exploration
         '''
         self.planner.route_to(destination)
-        # pdb.set_trace()
-        # TODO: Prepare for a new trip; reset any variables here, if required
+        random.shuffle(ALL_ACTIONS)
         self.prev_state = None
         self.prev_reward = None
         self.prev_action = None
 
+        # learning rate
         if self.counter < 50:
             self.alpha -= 0.01
             # self.alpha = (self.alpha // 0.0001) * 0.0001
 
-        if self.counter < 0:
+        # long term focus
+        if self.counter < 20:
             self.gamma += 0.01
 
+        # randomness
         if self.epsilon < 0:
             # self.epsilon -= 0.01
-            self.epsilon = (self.epsilon // 0.0001) * 0.0001
+            self.epsilon = (self.epsilon * .9 // 0.0001) * 0.0001
 
+        if self.counter >= 10 * 98:
+            pprint(self.Q)
+            # pdb.set_trace()
 
-        self.counter += 50
+        self.counter += 10
 
     def get_q_val(self, state, action):
         try:
             return self.Q[(self.state, action)]
         except KeyError:
-            self.Q[(self.state, action)] = 0
+            # optimism in the face of uncertainty
+            self.Q[(self.state, action)] = 0.05
         return 0
 
     def best_q_action(self, s):
@@ -158,12 +166,19 @@ def run():
     e.set_primary_agent(a, enforce_deadline=True)  # specify agent to track
     # NOTE: You can set enforce_deadline=False while debugging to allow longer trials
 
-    # Now simulate it
-    sim = Simulator(e, update_delay=0, display=False)  # create simulator (uses pygame when display=True, if available)
-    # NOTE: To speed up simulation, reduce update_delay and/or set display=False
+    show = False
+    # NOTE: To speed up simulation, set show = False.
+    # NOTE: To show the GUI, set show = True
 
-    sim.run(n_trials=400)  # run for a specified number of trials
-    # NOTE: To quit midway, press Esc or close pygame window, or hit Ctrl+C on the command-line
+    if show:
+        # Now simulate it
+        sim = Simulator(e, update_delay=0.5, display=True)  # create simulator (uses pygame when display=True, if available)
+        sim.run(n_trials=100)  # run for a specified number of trials
+        # NOTE: To quit midway, press Esc or close pygame window, or hit Ctrl+C on the command-line
+    else:
+        sim = Simulator(e, update_delay=0.0, display=False)
+        sim.run(n_trials=100)
+
 
 
 if __name__ == '__main__':
