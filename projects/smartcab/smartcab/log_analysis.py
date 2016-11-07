@@ -35,7 +35,7 @@ def check_environment_reset(env_reset):
     data = []
     start, end, deadline = '', '', ''
     if env_reset.startswith('Environment.reset()'):
-        data = re_findall('[\w.]+', env_reset)
+        data = re_findall('[-\w.]+', env_reset)
     for i, each in enumerate(data):
         if each == 'start':
             start = map(int, [data[i + 1], data[i + 2]])
@@ -49,7 +49,7 @@ def check_learning_update(learning_update):
     deadline, expected_reward, reward = 0, 0, 0
     data = []
     if learning_update.startswith('LearningAgent.update()'):
-        data = re_findall('[\w.]+', learning_update)
+        data = re_findall('[-\w.]+', learning_update)
     for i, each in enumerate(data):
         if each == 'deadline':
             deadline = data[i + 1]
@@ -57,7 +57,7 @@ def check_learning_update(learning_update):
             expected_reward = data[i + 1]
         elif each == 'reward':
             reward = data[i + 1]
-    return deadline, expected_reward, reward
+    return map(float, [deadline, expected_reward, reward])
 
 
 def check_learning_update_old(learning_update):
@@ -136,16 +136,18 @@ def success_check(data):
     return ret_dict
 
 
-def total_stats(filename=FILE):
+def total_stats(filename=FILE, return_dict=False):
     data = fetch_data(filename)
     game = success_check(data)
     game_stats = pd.DataFrame.from_dict(game)
+    if return_dict:
+        return game_stats
 
     for col in [u'all_deadlines',  u'all_expected_rewards', u'all_trails',
                u'all_main_deadline', u'all_outcomes', u'all_rewards', # u'all_start', u'all_destinations'
                ]:
         game_stats[col] = pd.to_numeric(game_stats[col])
-        
+
     game_stats['Q_pred'] = game_stats.all_expected_rewards - game_stats.all_outcomes
     game_stats['steps'] = game_stats.all_main_deadline - game_stats.all_deadlines
     game_stats['avg_steps'] = game_stats.all_rewards / game_stats.steps
