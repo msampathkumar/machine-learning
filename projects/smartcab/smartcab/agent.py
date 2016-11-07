@@ -166,7 +166,7 @@ def run():
     e.set_primary_agent(a, enforce_deadline=True)  # specify agent to track
     # NOTE: You can set enforce_deadline=False while debugging to allow longer trials
 
-    show = False
+    show = True
     # NOTE: To speed up simulation, set show = False.
     # NOTE: To show the GUI, set show = True
 
@@ -177,7 +177,7 @@ def run():
         # NOTE: To quit midway, press Esc or close pygame window, or hit Ctrl+C on the command-line
     else:
         sim = Simulator(e, update_delay=0.0, display=False)
-        sim.run(n_trials=100)
+        sim.run(n_trials=5)
 
 
 
